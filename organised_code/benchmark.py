@@ -14,6 +14,15 @@ def calculate_benchmark_quarterly():
             cumulative[i] += quarter / number_of_companies
     return cumulative
 
+def calculate_benchmark_for_given_quarters(quarters):
+    original_prices = get_quarter_price_change()
+    cumulative = np.zeros(len(quarters))
+    number_of_companies = len(original_prices)
+    for company in original_prices:
+        for i, quarter in enumerate(np.array(company)[quarters]):
+            cumulative[i] += quarter / number_of_companies
+    return cumulative
+
 def calculate_portfolio_quarterly(portfolio):
     # portfolio - list of companies's indexes included in the selected portfolio
     original_prices = np.array(get_quarter_price_change())[portfolio]
@@ -52,13 +61,25 @@ def draw_portfolio(cumulative):
 
 # draw_portfolio(calculate_benchmark_quarterly())
 
-def calculate_portfolio_gain_in_given_quarter(portfolio, quarter):
+def calculate_portfolio_gain_in_given_quarter(portfolio, quarters):
     # portfolio - list of companies's index in used_symbols list
     # quarter - list of quarters based on which calculate gain every value in [0, 41)
     original_prices = np.array(get_quarter_price_change())[portfolio]
     cumulative = np.zeros(len(original_prices[0]))
     number_of_companies = len(original_prices)
     for company in original_prices:
-        for i, quarter in enumerate(np.array(company)[quarter]):
+        for i, quarter in enumerate(np.array(company)[quarters]):
             cumulative[i] += quarter / number_of_companies
     return cumulative
+
+
+def sum_quarters_gain(gains):
+    y = gains
+    for i, value in enumerate(y):
+        if i > 0:
+            y[i] = y[i-1] * (1 + y[i])
+            y[i-1] -= 1
+        else:
+            y[i] += 1
+    return y[-1] - 1
+

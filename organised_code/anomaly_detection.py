@@ -94,62 +94,63 @@ def compare(stat_1, price_1, stat_2, price_2, detector, per_out, operation='sum'
     return len(common)/len(train_anomaly), len(train_anomaly), indexes_to_symbol(common)
 
 
-price_original_matrixes = get_prices()
-stat_databases = get_stat_data()
-# calculate and create a huge table of results
-with open('resutls_8.csv', 'w', newline='') as csvfile:
-    writer = csv.writer(csvfile, delimiter=',',
-                        quotechar='|', quoting=csv.QUOTE_MINIMAL)
-    steps = 10 #number of quarters to which we compare
-    writer.writerow([
-        'per_out',
-        'det-dist-oper',
-        'gamma',
-        'cloud_number',
-        'avg_len',
-        *range(1, steps+1),
-        *range(1, steps+1)])
+def calculate():
+    price_original_matrixes = get_prices()
+    stat_databases = get_stat_data()
+    # calculate and create a huge table of results
+    with open('resutls_8.csv', 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile, delimiter=',',
+                            quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        steps = 10 #number of quarters to which we compare
+        writer.writerow([
+            'per_out',
+            'det-dist-oper',
+            'gamma',
+            'cloud_number',
+            'avg_len',
+            *range(1, steps+1),
+            *range(1, steps+1)])
 
-    #     'corr'/'custom'
-    for distance_measure in ['custom']:
-        price_matrixes = calculate_price_distances(price_original_matrixes, distance_measure)
-        #         'sum'/'mult'
-        operation = 'sum'
-        for gamma in np.arange(0.4, 0.6, 0.05):
-            stat_matrixes = kernalise_database(stat_databases, gamma=gamma)
-            #             'svm'/'lof'/'custom'
-            for detector in ['custom']:
-                for cloud_number in np.arange(10, 20, 5):
-                    for per_out in np.arange(0.10, 0.13, 0.02):
-                        step_means = []
-                        step_std = []
-                        avg_len = 0
-                        for step in range(steps):
-                            predicted_anomylies_percentage = []
-                            predicted_length = []
-                            for i in range(1, 40 - step):
-                                a, b, c = compare(stat_matrixes[i-1],
-                                                  price_matrixes[i],
-                                                  stat_matrixes[i + step],
-                                                  price_matrixes[i+1 + step],
-                                                  detector,
-                                                  per_out,
-                                                  operation,
-                                                  cloud_number)
-                                predicted_anomylies_percentage.append(a)
-                                predicted_length.append(b)
-                            #                     avg_len = np.mean(predicted_length)
-                            avg_per = np.mean(predicted_anomylies_percentage)
-                            avg_len = np.mean(predicted_length)
-                            std = np.std(predicted_anomylies_percentage)
-                            step_means.append(round(avg_per, 3))
-                            step_std.append(round(std, 3))
-                        writer.writerow([
-                            round(per_out, 3),
-                            "{}-{}-{}".format(detector, distance_measure, operation),
-                            round(gamma,2),
-                            cloud_number,
-                            round(avg_len,1),
-                            *step_means,
-                            *step_std
-                        ]),
+        #     'corr'/'custom'
+        for distance_measure in ['custom']:
+            price_matrixes = calculate_price_distances(price_original_matrixes, distance_measure)
+            #         'sum'/'mult'
+            operation = 'sum'
+            for gamma in np.arange(0.4, 0.6, 0.05):
+                stat_matrixes = kernalise_database(stat_databases, gamma=gamma)
+                #             'svm'/'lof'/'custom'
+                for detector in ['custom']:
+                    for cloud_number in np.arange(10, 20, 5):
+                        for per_out in np.arange(0.10, 0.13, 0.02):
+                            step_means = []
+                            step_std = []
+                            avg_len = 0
+                            for step in range(steps):
+                                predicted_anomylies_percentage = []
+                                predicted_length = []
+                                for i in range(1, 40 - step):
+                                    a, b, c = compare(stat_matrixes[i-1],
+                                                      price_matrixes[i],
+                                                      stat_matrixes[i + step],
+                                                      price_matrixes[i+1 + step],
+                                                      detector,
+                                                      per_out,
+                                                      operation,
+                                                      cloud_number)
+                                    predicted_anomylies_percentage.append(a)
+                                    predicted_length.append(b)
+                                #                     avg_len = np.mean(predicted_length)
+                                avg_per = np.mean(predicted_anomylies_percentage)
+                                avg_len = np.mean(predicted_length)
+                                std = np.std(predicted_anomylies_percentage)
+                                step_means.append(round(avg_per, 3))
+                                step_std.append(round(std, 3))
+                            writer.writerow([
+                                round(per_out, 3),
+                                "{}-{}-{}".format(detector, distance_measure, operation),
+                                round(gamma,2),
+                                cloud_number,
+                                round(avg_len,1),
+                                *step_means,
+                                *step_std
+                            ]),
